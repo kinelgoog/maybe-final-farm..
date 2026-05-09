@@ -4,7 +4,7 @@ const path = require('path');
 
 const LOGIN = process.env.STEAM_LOGIN || '';
 const PASS  = process.env.STEAM_PASSWORD || '';
-const APPS  = (process.env.APP_IDS || '730').split(',').map(Number);
+const APPS  = (process.env.APP_IDS || '730,4465480').split(',').map(Number);
 const PORT  = process.env.PORT || 3000;
 
 const client = new SteamUser({ promptSteamGuardCode: false, autoRelogin: true });
@@ -122,7 +122,7 @@ h1{font-size:22px;font-weight:800;color:#fff;letter-spacing:-0.5px;margin-bottom
 <div class="card" id="card">
   <span class="star-icon">&#10027;</span>
   <h1>Steam Idler</h1>
-  <p class="sub">CS2 // HOUR FARMER</p>
+  <p class="sub">CS2, CSGO // HOUR FARMER</p>
 
   <div id="v-connecting" class="view active">
     <div class="pill"><span class="dot pending"></span><span id="conn-txt">подключаемся...</span></div>
@@ -143,7 +143,7 @@ h1{font-size:22px;font-weight:800;color:#fff;letter-spacing:-0.5px;margin-bottom
     <div class="stats-grid">
       <div class="stat"><div class="stat-val" id="s-days">0</div><div class="stat-lbl">дней онлайн</div></div>
       <div class="stat"><div class="stat-val" id="s-total">0.00</div><div class="stat-lbl">часов сессии</div></div>
-      <div class="stat"><div class="stat-val">730</div><div class="stat-lbl">app id</div></div>
+      <div class="stat"><div class="stat-val">0</div><div class="stat-lbl">app id</div></div>
       <div class="stat"><div class="stat-val" id="s-uptime">0</div><div class="stat-lbl">дней работы</div></div>
     </div>
   </div>
