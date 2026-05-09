@@ -134,7 +134,7 @@ h1{font-size:22px;font-weight:800;color:#fff;letter-spacing:-0.5px;margin-bottom
       <span class="username" id="uname">—</span>
     </div>
     <div class="pill"><span class="dot active"></span><span>фарм идёт · offline</span></div>
-    <div class="hours-label">нафармлено этой сессией</div>
+    <div class="hours-label">.</div>
     <div class="hours-big" id="hv">0.00</div>
     <div class="hours-unit">часов</div>
     <div class="uptime-bar-wrap"><div class="uptime-bar" id="ubar" style="width:0%"></div></div>
@@ -143,7 +143,7 @@ h1{font-size:22px;font-weight:800;color:#fff;letter-spacing:-0.5px;margin-bottom
     <div class="stats-grid">
       <div class="stat"><div class="stat-val" id="s-days">0</div><div class="stat-lbl">дней онлайн</div></div>
       <div class="stat"><div class="stat-val" id="s-total">0.00</div><div class="stat-lbl">часов сессии</div></div>
-      <div class="stat"><div class="stat-val">0</div><div class="stat-lbl">app id</div></div>
+      <div class="stat"><div class="stat-val">@itskinel</div><div class="stat-lbl">автор (tg)</div></div>
       <div class="stat"><div class="stat-val" id="s-uptime">0</div><div class="stat-lbl">дней работы</div></div>
     </div>
   </div>
