@@ -121,8 +121,8 @@ h1{font-size:22px;font-weight:800;color:#fff;letter-spacing:-0.5px;margin-bottom
 <div class="scene" id="scene">
 <div class="card" id="card">
   <span class="star-icon">&#10027;</span>
-  <h1><3</h1>
-  <p class="sub">CS2, CSGO // НАКРУТКА ЧАСОВ</p>
+  <h1>НАКРУТКА ЧАСОВ</h1>
+  <p class="sub">В CS2, CSGO</p>
 
   <div id="v-connecting" class="view active">
     <div class="pill"><span class="dot pending"></span><span id="conn-txt">подключаемся...</span></div>
@@ -143,7 +143,7 @@ h1{font-size:22px;font-weight:800;color:#fff;letter-spacing:-0.5px;margin-bottom
     <div class="stats-grid">
       <div class="stat"><div class="stat-val" id="s-days">0</div><div class="stat-lbl">дней онлайн</div></div>
       <div class="stat"><div class="stat-val" id="s-total">0.00</div><div class="stat-lbl">часов сессии</div></div>
-      <div class="stat"><div class="stat-val">@itskinel</div><div class="stat-lbl">автор (tg)</div></div>
+      <div class="stat"><div class="stat-val">itskinel</div><div class="stat-lbl">автор (tg)</div></div>
       <div class="stat"><div class="stat-val" id="s-uptime">0</div><div class="stat-lbl">дней работы</div></div>
     </div>
   </div>
