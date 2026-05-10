@@ -44,18 +44,10 @@ function getTotalHours(){
 }
 
 function fetchProfile(){
-  if(!STEAM_KEY||!STEAM_ID)return;
-  const url=`https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v2/?key=${STEAM_KEY}&steamids=${STEAM_ID}`;
-  https.get(url,res=>{
-    let raw='';
-    res.on('data',d=>raw+=d);
-    res.on('end',()=>{
-      try{
-        const p=JSON.parse(raw).response.players[0];
-        if(p){state.username=p.personaname;state.avatarUrl=p.avatarfull;state.profileUrl=p.profileurl;console.log('Profile:',state.username);}
-      }catch(e){console.error('Profile error:',e.message);}
-    });
-  }).on('error',e=>console.error('Profile error:',e.message));
+  state.username  = 'afk.';
+  state.avatarUrl = 'https://avatars.akamai.steamstatic.com/1c3cc1ada7d31eeb13536c50a053ad620f42f239_full.jpg';
+  state.profileUrl= 'https://steamcommunity.com/profiles/76561199809677831';
+  console.log('Profile hardcoded:', state.username);
 }
 
 let uptimeInterval=null;
