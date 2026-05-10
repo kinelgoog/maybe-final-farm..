@@ -137,7 +137,7 @@ const HTML = `<!DOCTYPE html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>idler — CS2 hour farm</title>
+<title>фармилка часов</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -348,10 +348,10 @@ canvas { position:fixed; inset:0; z-index:0; pointer-events:none; }
           <div class="brand-dot" id="brand-dot"></div>
           <div>
             <div class="brand-name">Steam Idler</div>
-            <div class="brand-sub">CS2 · APP 730</div>
+            <div class="brand-sub">кс2, ксго и гд</div>
           </div>
         </div>
-        <div class="badge" id="status-badge">фарм идёт</div>
+        <div class="badge" id="status-badge">автор — @itskinel</div>
       </div>
 
       <div class="card-body">
