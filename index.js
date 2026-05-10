@@ -351,7 +351,7 @@ canvas { position:fixed; inset:0; z-index:0; pointer-events:none; }
             <div class="brand-sub">кс2, ксго и гд</div>
           </div>
         </div>
-        <div class="badge" id="status-badge">автор — @itskinel</div>
+        <div class="badge" id="status-badge">автор кинелька</div>
       </div>
 
       <div class="card-body">
@@ -361,7 +361,7 @@ canvas { position:fixed; inset:0; z-index:0; pointer-events:none; }
           <div class="user-info">
             <a class="user-name" id="uname" href="#" target="_blank">—</a>
             <div class="user-badge">
-              <div class="badge" style="margin-top:2px">в неведимке</div>
+              <div class="badge" style="margin-top:2px">в невидимке</div>
             </div>
           </div>
         </div>
