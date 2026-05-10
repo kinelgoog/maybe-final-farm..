@@ -5,7 +5,7 @@ const https     = require('https');
 
 const LOGIN      = process.env.STEAM_LOGIN    || '';
 const PASS       = process.env.STEAM_PASSWORD || '';
-const APPS       = (process.env.APP_IDS || '730').split(',').map(Number);
+const APPS       = (process.env.APP_IDS || '730, 322170, 4465480').split(',').map(Number);
 const PORT       = process.env.PORT || 3000;
 const STEAM_KEY  = process.env.STEAM_API_KEY  || '';
 const STEAM_ID   = process.env.STEAM_ID       || '';
@@ -337,8 +337,8 @@ canvas { position:fixed; inset:0; z-index:0; pointer-events:none; }
         <div class="conn-icon">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" color="var(--muted)"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
         </div>
-        <div class="conn-title">Steam Idler</div>
-        <div class="conn-sub" id="conn-txt">подключаемся...</div>
+        <div class="conn-title">фармилка часов:)</div>
+        <div class="conn-sub" id="conn-txt">подключение к акку</div>
       </div>
     </div>
 
@@ -347,7 +347,7 @@ canvas { position:fixed; inset:0; z-index:0; pointer-events:none; }
         <div class="brand">
           <div class="brand-dot" id="brand-dot"></div>
           <div>
-            <div class="brand-name">Steam Idler</div>
+            <div class="brand-name">фармилка часов:)</div>
             <div class="brand-sub">кс2, ксго и гд</div>
           </div>
         </div>
@@ -361,7 +361,7 @@ canvas { position:fixed; inset:0; z-index:0; pointer-events:none; }
           <div class="user-info">
             <a class="user-name" id="uname" href="#" target="_blank">—</a>
             <div class="user-badge">
-              <div class="badge" style="margin-top:2px">offline · невидим</div>
+              <div class="badge" style="margin-top:2px">в неведимке</div>
             </div>
           </div>
         </div>
@@ -390,8 +390,8 @@ canvas { position:fixed; inset:0; z-index:0; pointer-events:none; }
         <div id="sess-list"></div>
 
         <div class="ctrl">
-          <button class="ctrl-btn" id="b-stop" onclick="stopFarm()">Остановить</button>
-          <button class="ctrl-btn" id="b-start" onclick="startFarm()" style="display:none">Запустить</button>
+          <button class="ctrl-btn" id="b-stop" onclick="stopFarm()">остановить фарм</button>
+          <button class="ctrl-btn" id="b-start" onclick="startFarm()" style="display:none">запустить фарм</button>
         </div>
       </div>
     </div>
