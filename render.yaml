@@ -1,14 +1,14 @@
 services:
   - type: web
     name: steam-idler
-    env: node
-    buildCommand: npm install
-    startCommand: node index.js
-    plan: free
+    runtime: node
     envVars:
-      - key: STEAM_LOGIN
+      - key: PORT
+        value: "10000"
+      - key: MONGODB_URI
         sync: false
-      - key: STEAM_PASSWORD
+      - key: ENCRYPTION_KEY
         sync: false
-      - key: APP_IDS
-        value: "730"
+    buildCommand: "npm install"
+    startCommand: "node index.js"
+    healthCheckPath: "/health"
