@@ -311,12 +311,12 @@ const HTML = `<!DOCTYPE html>
     }
     
     function renderAccounts() {
-      const el = document.getElementById('accounts');
-      el.innerHTML = ACCOUNTS.map(a => 
-        `<div class="account ${a.id === currentAccount ? 'active' : ''}" 
-         onclick="switchAccount('${a.id}')">${a.name}</div>`
-      ).join('');
-    }
+  const el = document.getElementById('accounts');
+  el.innerHTML = ACCOUNTS.map(a => {
+    const activeClass = a.id === currentAccount ? 'active' : '';
+    return `<div class="account ${activeClass}" onclick="switchAccount('${a.id}')">${a.name}</div>`;
+  }).join('');
+}
     
     function switchAccount(id) {
       currentAccount = id;
