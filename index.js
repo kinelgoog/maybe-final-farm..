@@ -747,12 +747,20 @@ const HTML = `<!DOCTYPE html>
     }
     
     function renderAccounts(accounts, currentId) {
-      const el = document.getElementById('accounts');
-      el.innerHTML = accounts.map(a => 
-        `<div class="account ${a.id === currentId ? 'active' : ''}" 
-         onclick="switchAccount('${a.id}')">${a.login}</div>`
-      ).join('');
-    }
+  const el = document.getElementById('accounts');
+  if (!el) return;
+  
+  // Создаем элементы через DOM API вместо innerHTML
+  el.innerHTML = '';
+  
+  accounts.forEach(a => {
+    const accountEl = document.createElement('div');
+    accountEl.className = 'account ' + (a.id === currentId ? 'active' : '');
+    accountEl.textContent = a.login;
+    accountEl.onclick = () => switchAccount(a.id);
+    el.appendChild(accountEl);
+  });
+}
     
     function renderGames(appIds) {
       const el = document.getElementById('games-list');
