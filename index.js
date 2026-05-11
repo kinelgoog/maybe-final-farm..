@@ -6,7 +6,7 @@ const app = express();
 app.use(express.json());
 app.use(express.static('public'));
 
-// Данные в /tmp
+// Data file
 const DATA_FILE = path.join('/tmp', 'idler_data.json');
 
 function loadData() {
