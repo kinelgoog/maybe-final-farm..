@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Steam Idler Pro</title>
+  <style>
+    /* Переменные для двух тем оформления */
+    [data-theme="dark"] {
+      --bg: #0b0b0f;
+      --card-bg: rgba(26, 26, 36, 0.45);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --text: #f3f4f6;
+      --text-muted: #8e8e93;
+      --accent: #a855f7; /* Фиолетовый акцент вместо зеленого */
+      --island-bg: rgba(15, 15, 20, 0.7);
+      --island-border: rgba(255, 255, 255, 0.12);
+      --shadow: rgba(0, 0, 0, 0.5);
+    }
+
+    [data-theme="light"] {
+      --bg: #f4f4f9;
+      --card-bg: rgba(255, 255, 255, 0.5);
+      --card-border: rgba(0, 0, 0, 0.06);
+      --text: #1c1c1e;
+      --text-muted: #6c6c72;
+      --accent: #8b5cf6; /* Приятный фиолетовый для светлой темы */
+      --island-bg: rgba(255, 255, 255, 0.7);
+      --island-border: rgba(0, 0, 0, 0.08);
+      --shadow: rgba(0, 0, 0, 0.05);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
+      transition: background 0.5s ease, color 0.3s ease;
+    }
+
+    /* Холст для оптимизированной анимации падающих звезд */
+    #star-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .main-layout {
+      position: relative;
+      z-index: 2;
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 85px 16px 30px 16px;
+    }
+
+    /* Эффект Liquid Glass (Жидкое стекло iOS) с аппаратным ускорением */
+    .liquid-glass {
+      background: var(--card-bg);
+      backdrop-filter: blur(25px) saturate(190%);
+      -webkit-backdrop-filter: blur(25px) saturate(190%);
+      border: 1px solid var(--card-border);
+      box-shadow: 0 8px 32px 0 var(--shadow);
+      transform: translateZ(0); /* Включение GPU магии, убирает лаги */
+    }
+
+    /* Dynamic Island */
+    .island {
+      position: fixed;
+      top: 16px;
+      left: 50%;
+      transform: translateX(-50%) scale(0.9);
+      border-radius: 24px;
+      padding: 10px 24px;
+      font-size: 14px;
+      font-weight: 500;
+      opacity: 0;
+      visibility: hidden;
+      transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s, visibility 0.3s;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--island-bg);
+      border: 1px solid var(--island-border);
+    }
+
+    .island.show {
+      transform: translateX(-50%) scale(1);
+      opacity: 1;
+      visibility: visible;
+    }
+
+    /* Блок переключателя темы и аккаунтов */
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      gap: 12px;
+    }
+
+    .accounts {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      flex-grow: 1;
+      padding-bottom: 4px;
+    }
+    
+    .accounts::-webkit-scrollbar {
+      display: none;
+    }
+
+    .acc-pill {
+      padding: 8px 16px;
+      border-radius: 20px;
+      cursor: pointer;
+      white-space: nowrap;
+      font-size: 14px;
+      font-weight: 500;
+      transition: background 0.2s, transform 0.1s;
+    }
+
+    .acc-pill.active {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    /* Кнопка смены темы (SVG вместо эмодзи) */
+    .theme-toggle {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 50%;
+      width: 38px;
+      height: 38px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--text);
+      transition: background 0.2s;
+      flex-shrink: 0;
+    }
+
+    /* Карточка (Никаких поворотов и 3D-эффектов при ховере/клике - все стабильно) */
+    .card {
+      border-radius: 24px;
+      overflow: hidden;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    /* Фиолетовое свечение в правом верхнем углу карточки */
+    .header-info {
+      position: relative;
+    }
+    .header-info::after {
+      content: '';
+      position: absolute;
+      top: -30px;
+      right: -30px;
+      width: 80px;
+      height: 80px;
+      background: var(--accent);
+      filter: blur(40px);
+      opacity: 0.35;
+      pointer-events: none;
+    }
+
+    .badge {
+      padding: 6px 14px;
+      border-radius: 14px;
+      font-size: 13px;
+      font-weight: 600;
+      background: rgba(168, 85, 247, 0.12);
+      color: var(--accent);
+    }
+
+    .badge.online {
+      background: rgba(34, 197, 94, 0.15);
+      color: #22c55e;
+    }
+
+    .stat {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .stat-box {
+      background: rgba(255, 255, 255, 0.03);
+      padding: 14px;
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.02);
+    }
+
+    .val {
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+
+    .lbl {
+      color: var(--text-muted);
+      font-size: 11px;
+      text-transform: uppercase;
+      font-weight: 600;
+      margin-top: 2px;
+    }
+
+    .prog {
+      margin-bottom: 16px;
+    }
+
+    .prog-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .p-bar {
+      height: 8px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .p-fill {
+      height: 100%;
+      background: var(--accent);
+      width: 0%;
+      transition: width 0.6s ease;
+      border-radius: 4px;
+    }
+
+    .p-fill.cards {
+      background: #f59e0b;
+    }
+
+    .game-list {
+      margin-top: 10px;
+      background: rgba(0, 0, 0, 0.1);
+      border-radius: 16px;
+      padding: 4px 14px;
+      max-height: 180px;
+      overflow-y: auto;
+    }
+
+    .game-item {
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      display: flex;
+      justify-content: space-between;
+      font-size: 14px;
+    }
+
+    .game-item:last-child {
+      border: none;
+    }
+
+    .ctrl {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1.2fr;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .btn {
+      padding: 12px;
+      border-radius: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 14px;
+      transition: opacity 0.2s, background 0.2s;
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text);
+      border: 1px solid var(--card-border);
+    }
+
+    .btn:active {
+      opacity: 0.8;
+    }
+
+    .btn.primary {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+    }
+
+    /* Модалка добавления аккаунта */
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(10px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+      padding: 16px;
+    }
+
+    .modal.show {
+      display: flex;
+    }
+
+    .modal-box {
+      width: 100%;
+      max-width: 360px;
+      padding: 24px;
+      border-radius: 24px;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px 16px;
+      margin: 8px 0;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      color: var(--text);
+      font-size: 14px;
+      outline: none;
+    }
+    
+    input:focus {
+      border-color: var(--accent);
+    }
+
+    .theme-icon {
+      width: 20px;
+      height: 20px;
+      fill: currentColor;
+    }
+    
+    [data-theme="light"] .sun-icon,
+    [data-theme="dark"] .moon-icon {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <canvas id="star-canvas"></canvas>
+
+  <div class="island liquid-glass" id="island"></div>
+
+  <div class="main-layout">
+    
+    <div class="top-bar">
+      <div class="accounts" id="accounts"></div>
+      
+      <button class="theme-toggle" id="theme-tog" aria-label="Смена темы">
+        <svg class="theme-icon moon-icon" viewBox="0 0 24 24"><path d="M12.3 22h-.1c-5.5 0-10-4.5-10-10 0-4.8 3.5-8.9 8.2-9.8.5-.1 1 .3.9.8-.1.5-.6.9-1.1.9-3.9.4-6.9 3.7-6.9 7.7 0 4.4 3.6 8 8 8 3.9 0 7.2-2.9 7.7-6.8.1-.5.5-.8 1-.8.5.1.8.6.7 1.1-.8 4.6-4.9 8.1-9.4 8.1z"/></svg>
+        <svg class="theme-icon sun-icon" viewBox="0 0 24 24"><path d="M12 4.5a1.5 1.5 0 0 1 1.5-1.5V1.5a1.5 1.5 0 0 1 3 0V3a1.5 1.5 0 0 1-1.5 1.5M12 19.5a1.5 1.5 0 0 1-1.5 1.5V21.5a1.5 1.5 0 0 1 3 0V20a1.5 1.5 0 0 1-1.5-1.5M4.5 12A1.5 1.5 0 0 1 3 13.5H1.5a1.5 1.5 0 0 1 0-3H3A1.5 1.5 0 0 1 4.5 12M19.5 12a1.5 1.5 0 0 1 1.5-1.5H22.5a1.5 1.5 0 0 1 0 3H21a1.5 1.5 0 0 1-1.5-1.5M6.7 6.7a1.5 1.5 0 0 1 0-2.1l1.1-1.1a1.5 1.5 0 0 1 2.1 2.1L8.8 6.7a1.5 1.5 0 0 1-2.1 0M16.2 16.2a1.5 1.5 0 0 1 2.1 0l1.1 1.1a1.5 1.5 0 0 1-2.1 2.1l-1.1-1.1a1.5 1.5 0 0 1 0-2.1M6.7 17.3a1.5 1.5 0 0 1 2.1 0l1.1 1.1a1.5 1.5 0 0 1-2.1 2.1l-1.1-1.1a1.5 1.5 0 0 1 0-2.1M17.3 6.7a1.5 1.5 0 0 1 0-2.1l1.1-1.1a1.5 1.5 0 0 1 2.1 2.1l-1.1 1.1a1.5 1.5 0 0 1-2.1 0M12 6a6 6 0 1 0 0 12 6 6 0 0 0 0-12z"/></svg>
+      </button>
+    </div>
+
+    <div class="card liquid-glass">
+      <div class="header">
+        <div class="header-info">
+          <b style="font-size: 18px; letter-spacing: -0.3px;">Steam Idler</b>
+          <div style="font-size: 12px; color: var(--text-muted); margin-top: 1px;">Фарм часов и карточек</div>
+        </div>
+        <div class="badge" id="badge">Оффлайн</div>
+      </div>
+
+      <div class="stat">
+        <div class="stat-box">
+          <div class="val" id="hours">0.00</div>
+          <div class="lbl">Часов</div>
+        </div>
+        <div class="stat-box">
+          <div class="val" id="cards">0</div>
+          <div class="lbl">Карточек</div>
+        </div>
+      </div>
+
+      <div class="prog">
+        <div class="prog-labels">
+          <span>Сессия</span>
+          <span id="s-time">0ч 0м</span>
+        </div>
+        <div class="p-bar"><div class="p-fill" id="s-bar"></div></div>
+      </div>
+
+      <div class="prog">
+        <div class="prog-labels">
+          <span>До следующей карточки</span>
+          <span id="c-time">0м</span>
+        </div>
+        <div class="p-bar"><div class="p-fill cards" id="c-bar"></div></div>
+      </div>
+
+      <div class="game-list" id="games">
+        <div style="padding: 10px; color: var(--text-muted); text-align: center;">Загрузка данных...</div>
+      </div>
+
+      <div class="ctrl">
+        <button class="btn" id="add-btn">+ Аккаунт</button>
+        <button class="btn" id="check-btn">Игры</button>
+        <button class="btn primary" id="tog-btn">Старт</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="modal">
+    <div class="modal-box liquid-glass">
+      <h3 style="margin-bottom: 12px; font-size: 18px;">Новый аккаунт</h3>
+      <input id="inp-login" placeholder="Логин Steam">
+      <input id="inp-pass" type="password" placeholder="Пароль">
+      <input id="inp-apps" placeholder="App ID через запятую (например: 730, 322170)">
+      <button class="btn primary" style="margin-top: 12px; width: 100%" id="modal-add">Добавить в систему</button>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      var cur = null;
+      var el = function(id) { return document.getElementById(id); };
+
+      // Динамический остров уведомлений (iOS Liquid Glass)
+      function notify(msg) {
+        var isl = el('island');
+        isl.textContent = msg;
+        isl.classList.add('show');
+        setTimeout(function() { isl.classList.remove('show'); }, 3500);
+      }
+
+      // Переключатель светлой и темной тем
+      var themeTog = el('theme-tog');
+      themeTog.onclick = function() {
+        var html = document.documentElement;
+        var currentTheme = html.getAttribute('data-theme');
+        var newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        html.setAttribute('data-theme', newTheme);
+      };
+
+      // Рендеринг списка аккаунтов вверху
+      function renderAccs(accs, curId) {
+        var cont = el('accounts');
+        cont.innerHTML = '';
+        accs.forEach(function(a) {
+          var d = document.createElement('div');
+          d.className = 'acc-pill liquid-glass' + (a.id === curId ? ' active' : '');
+          d.textContent = a.login;
+          d.onclick = function() { switchAcc(a.id); };
+          cont.appendChild(d);
+        });
+      }
+
+      // Точная фильтрация и маппинг ваших App ID без багов
+      function renderGames(ids) {
+        var cont = el('games');
+        cont.innerHTML = '';
+        if (!ids || ids.length === 0) {
+          cont.innerHTML = '<div style="padding:10px;color:var(--text-muted);text-align:center;">Нет активных игр</div>';
+          return;
+        }
+        ids.forEach(function(id) {
+          var name = 'App ID ' + id;
+          if (id == 730) name = 'CS2';
+          if (id == 4465480) name = 'CS:GO';
+          if (id == 322170) name = 'Geometry Dash';
+          
+          var d = document.createElement('div');
+          d.className = 'game-item';
+          d.innerHTML = '<span>' + name + '</span><span style="color:var(--accent);font-weight:600;font-size:12px">' + id + '</span>';
+          cont.appendChild(d);
+        });
+      }
+
+      function switchAcc(id) {
+        cur = id;
+        loadStatus();
+      }
+
+      function loadStatus() {
+        if (!cur) return;
+        fetch('/status/' + cur)
+          .then(function(r) { return r.json(); })
+          .then(function(d) {
+            el('hours').textContent = d.totalHours;
+            el('cards').textContent = d.totalCards;
+            el('s-bar').style.width = d.cardProgress + '%';
+            el('c-bar').style.width = d.cardProgress + '%';
+            el('c-time').textContent = d.cardTimer;
+            el('s-time').textContent = Math.floor(d.totalHours % 24) + 'ч ' + Math.floor((d.totalHours * 60) % 60) + 'м';
+            
+            var isOnline = d.loggedIn;
+            var badge = el('badge');
+            badge.textContent = isOnline ? 'Фарм идёт' : 'Остановлен';
+            badge.className = isOnline ? 'badge online' : 'badge';
+            
+            var togBtn = el('tog-btn');
+            togBtn.textContent = isOnline ? 'Стоп' : 'Старт';
+            if (isOnline) {
+              togBtn.style.background = '#ef4444';
+              togBtn.style.color = '#fff';
+            } else {
+              togBtn.style.background = 'var(--accent)';
+              togBtn.style.color = '#fff';
+            }
+            
+            renderGames(d.appIds);
+          })
+          .catch(function(e) { console.error('Ошибка статуса:', e); });
+      }
+
+      // Загрузка первоначального состояния приложения
+      fetch('/accounts')
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+          renderAccs(d.accounts, d.currentAccount);
+          if (d.currentAccount) {
+            switchAcc(d.currentAccount);
+          } else if (d.accounts.length > 0) {
+            switchAcc(d.accounts[0].id);
+          }
+          setInterval(loadStatus, 15000); // Оптимальный апдейт раз в 15 секунд для экономии ресурсов
+        });
+
+      el('add-btn').onclick = function() { el('modal').classList.add('show'); };
+      el('modal').onclick = function(e) { if (e.target === this) this.classList.remove('show'); };
+
+      el('modal-add').onclick = function() {
+        var l = el('inp-login').value, p = el('inp-pass').value, a = el('inp-apps').value;
+        if (!l || !p) { alert('Заполните данные!'); return; }
+        
+        fetch('/accounts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ login: l, password: p, apps: a.split(',').map(Number).filter(Boolean) })
+        }).then(function() {
+          el('modal').classList.remove('show');
+          location.reload();
+        });
+      };
+
+      el('tog-btn').onclick = function() {
+        if (!cur) return;
+        var act = el('tog-btn').textContent === 'Стоп' ? 'stop' : 'start';
+        notify(act === 'start' ? '🚀 Инициализация сессии...' : '🛑 Остановка процессов...');
+        fetch('/control/' + cur, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: act })
+        }).then(function() { setTimeout(loadStatus, 1000); });
+      };
+
+      el('check-btn').onclick = function() {
+        if (!cur) return;
+        fetch('/control/' + cur, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'check' })
+        });
+        notify('🔍 Сканирование библиотеки Steam...');
+      };
+
+      // Высокопроизводительная отрисовка падающих 5-конечных звезд (Canvas 2D)
+      var canvas = el('star-canvas');
+      var ctx = canvas.getContext('2d');
+      var stars = [];
+
+      function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      }
+      window.addEventListener('resize', resizeCanvas);
+      resizeCanvas();
+
+      // Генерация звезд
+      for (var i = 0; i < 25; i++) {
+        stars.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height - canvas.height,
+          size: Math.random() * 6 + 4,
+          speed: Math.random() * 1.2 + 0.6,
+          opacity: Math.random() * 0.5 + 0.2
+        });
+      }
+
+      // Функция рисования правильной 5-конечной звезды
+      function drawStar(cx, cy, spikes, outerRadius, innerRadius, opacity) {
+        var rot = Math.PI / 2 * 3;
+        var x = cx;
+        var y = cy;
+        var step = Math.PI / spikes;
+
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - outerRadius);
+        for (var i = 0; i < spikes; i++) {
+          x = cx + Math.cos(rot) * outerRadius;
+          y = cy + Math.sin(rot) * outerRadius;
+          ctx.lineTo(x, y);
+          rot += step;
+
+          x = cx + Math.cos(rot) * innerRadius;
+          y = cy + Math.sin(rot) * innerRadius;
+          ctx.lineTo(x, y);
+          rot += step;
+        }
+        ctx.lineTo(cx, cy - outerRadius);
+        ctx.closePath();
+        
+        var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        ctx.fillStyle = isDark ? 'rgba(168, 85, 247, ' + opacity + ')' : 'rgba(139, 92, 246, ' + opacity + ')';
+        ctx.fill();
+      }
+
+      function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        for (var i = 0; i < stars.length; i++) {
+          var s = stars[i];
+          s.y += s.speed;
+          if (s.y > canvas.height) {
+            s.y = -20;
+            s.x = Math.random() * canvas.width;
+          }
+          // Рисуем 5-конечную звезду по координатам с лучами сверху вниз
+          drawStar(s.x, s.y, 5, s.size, s.size / 2, s.opacity);
+        }
+        requestAnimationFrame(animate); // Плавность 60+ FPS без лагов
+      }
+      animate();
+
+    })();
+  </script>
+</body>
+  </html>
