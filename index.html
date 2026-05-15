@@ -1,1 +1,371 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <title>Steam Idler | Premium</title>
+  <style>
+    :root {
+      --bg-deep: #060609;
+      --accent: #a855f7;
+      --accent-glow: rgba(168, 85, 247, 0.3);
+      --card-bg: rgba(15, 15, 22, 0.65);
+      --border: rgba(255, 255, 255, 0.06);
+      --text: #ffffff;
+      --text-dim: #64748b;
+      --ios-bezier: cubic-bezier(0.16, 1, 0.3, 1);
+    }
 
+    [data-theme="light"] {
+      --bg-deep: #f4f5fa;
+      --accent: #7c3aed;
+      --accent-glow: rgba(124, 58, 237, 0.15);
+      --card-bg: rgba(255, 255, 255, 0.75);
+      --border: rgba(0, 0, 0, 0.06);
+      --text: #0f172a;
+      --text-dim: #94a3b8;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: '-apple-system', 'SF Pro Display', sans-serif; }
+    
+    /* Железобетонный fallback для мобилок, чтобы не было белого экрана */
+    html, body { width: 100%; height: 100%; background-color: #060609; }
+    body { background: var(--bg-deep); color: var(--text); overflow: hidden; display: flex; justify-content: center; }
+
+    #space-canvas { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+    .glow-aura { position: fixed; top: -20%; left: 20%; width: 70vw; height: 70vw; background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%); filter: blur(120px); z-index: 1; pointer-events: none; }
+
+    /* TRUE DYNAMIC ISLAND */
+    .island-container { position: fixed; top: 16px; z-index: 9999; display: flex; justify-content: center; width: 100%; pointer-events: none; }
+    .dynamic-island {
+      pointer-events: auto; background: #000000; color: #ffffff;
+      border: 0.5px solid rgba(255, 255, 255, 0.12); box-shadow: 0 15px 35px rgba(0,0,0,0.6);
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.5s var(--ios-bezier); overflow: hidden;
+      width: 110px; height: 32px; border-radius: 20px; padding: 0 12px;
+    }
+    .dynamic-island.state-compact { width: 120px; height: 35px; }
+    .dynamic-island.state-wide { width: 310px; height: 40px; border-radius: 22px; padding: 0 16px; }
+    .dynamic-island.state-large { width: 360px; height: 85px; border-radius: 28px; padding: 16px; }
+
+    .island-content { display: flex; align-items: center; width: 100%; justify-content: space-between; font-size: 12px; font-weight: 600; opacity: 0; transition: opacity 0.2s ease; }
+    .island-content.visible { opacity: 1; }
+
+    .shell { position: relative; z-index: 10; width: 100%; max-width: 410px; height: 100%; padding: 85px 16px 20px; display: flex; flex-direction: column; }
+    
+    .tabs-row { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 16px; padding: 4px 0; }
+    .tabs-row::-webkit-scrollbar { display: none; }
+    .account-tab { padding: 10px 18px; background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 16px; font-size: 13px; font-weight: 700; white-space: nowrap; cursor: pointer; transition: 0.2s; }
+    .account-tab.active { background: var(--text); color: var(--bg-deep); border-color: transparent; }
+
+    .main-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 32px; padding: 24px; box-shadow: 0 20px 45px rgba(0, 0, 0, 0.15); position: relative; }
+    .main-card::before { content: ''; position: absolute; top: 0; left: 10%; right: 10%; height: 1px; background: linear-gradient(90deg, transparent, var(--accent), transparent); opacity: 0.4; }
+
+    .meta-title { margin-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-start; }
+    .meta-title h2 { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
+    .meta-title p { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1.5px; margin-top: 2px; }
+    
+    .pulse-indicator { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: var(--text-dim); }
+    .pulse-dot { width: 8px; height: 8px; background: #64748b; border-radius: 50%; }
+    .pulse-indicator.active { color: #10b981; }
+    .pulse-indicator.active .pulse-dot { background: #10b981; animation: blink 1.5s infinite ease-in-out; }
+
+    @keyframes blink { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; box-shadow: 0 0 8px #10b981; } }
+
+    .grid-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+    .pill-stat { background: rgba(0,0,0,0.15); border: 1px solid rgba(255,255,255,0.02); padding: 14px 18px; border-radius: 20px; }
+    .pill-stat .value { font-size: 24px; font-weight: 800; color: var(--accent); display: block; }
+    .pill-stat .label { font-size: 10px; color: var(--text-dim); text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; }
+
+    .section-label { font-size: 11px; font-weight: 800; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; display: block; }
+    .core-showcase { display: flex; gap: 6px; margin-bottom: 16px; }
+    .core-tag { background: rgba(255,255,255,0.03); border: 1px solid var(--border); padding: 8px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; color: var(--text); flex: 1; text-align: center; }
+
+    .stream-card { background: rgba(168, 85, 247, 0.04); border: 1px dashed rgba(168, 85, 247, 0.25); border-radius: 18px; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .stream-name { font-size: 14px; font-weight: 700; }
+    .stream-status { font-size: 11px; color: var(--accent); font-weight: 700; text-transform: uppercase; }
+
+    .bar-container { margin-bottom: 14px; }
+    .bar-label { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-dim); font-weight: 600; margin-bottom: 6px; }
+    .rail { height: 6px; background: rgba(255,255,255,0.04); border-radius: 4px; overflow: hidden; }
+    .fill-line { height: 100%; background: var(--accent); width: 0%; transition: width 0.8s var(--ios-bezier); }
+
+    .controls-row { display: grid; grid-template-columns: 1fr 1.2fr; gap: 10px; margin-top: 24px; }
+    .action-btn { background: rgba(255,255,255,0.03); border: 1px solid var(--border); padding: 14px; border-radius: 18px; color: var(--text); font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; }
+    .action-btn:active { transform: scale(0.97); }
+    .action-btn.main { background: var(--accent); color: white; border: none; box-shadow: 0 8px 20px var(--accent-glow); }
+
+    .theme-toggle { position: absolute; top: 36px; left: 16px; width: 36px; height: 36px; background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 100; }
+    
+    .amoled-dimmer { position: fixed; inset: 0; background: #000; opacity: 0; pointer-events: none; z-index: 99999; transition: opacity 2s ease; }
+    body.dimmed .amoled-dimmer { opacity: 0.92; pointer-events: auto; }
+    .wakeup-hint { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #444; font-size: 12px; font-weight: 600; display: none; }
+    body.dimmed .wakeup-hint { display: block; }
+
+    /* МОДАЛЬНОЕ ОКНО */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+      opacity: 0; pointer-events: none; transition: opacity 0.3s ease; z-index: 2000;
+      display: flex; align-items: center; justify-content: center; padding: 20px;
+    }
+    .modal-overlay.open { opacity: 1; pointer-events: auto; }
+    
+    .modal-body {
+      background: var(--card-bg); border: 1px solid var(--border); border-radius: 32px;
+      padding: 30px; width: 100%; max-width: 360px; box-shadow: 0 30px 60px rgba(0,0,0,0.5);
+      transform: translateY(20px) scale(0.95); transition: all 0.4s var(--ios-bezier);
+    }
+    .modal-overlay.open .modal-body { transform: translateY(0) scale(1); }
+    
+    .modal-body h3 { margin-bottom: 20px; font-size: 20px; font-weight: 800; }
+    .modal-body input {
+      width: 100%; padding: 16px; margin-bottom: 12px;
+      background: rgba(255,255,255,0.03); border: 1px solid var(--border);
+      border-radius: 16px; color: var(--text); outline: none; font-size: 14px; font-weight: 500;
+      transition: border-color 0.2s;
+    }
+    .modal-body input:focus { border-color: var(--accent); background: rgba(255,255,255,0.05); }
+  </style>
+</head>
+<body>
+
+  <div class="amoled-dimmer" id="dimmer"><div class="wakeup-hint">Тапни для пробуждения экрана</div></div>
+  <canvas id="space-canvas"></canvas>
+  <div class="glow-aura"></div>
+
+  <div class="theme-toggle" id="theme-btn">
+    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m0-11.314l.707.707m11.314 11.314l.707.707M12 8a4 4 0 100 8 4 4 0 000-8z"></path></svg>
+  </div>
+
+  <div class="island-container">
+    <div class="dynamic-island state-compact" id="island">
+      <div class="island-content" id="isl-content"></div>
+    </div>
+  </div>
+
+  <div class="shell">
+    <div class="tabs-row" id="accounts-nav"></div>
+
+    <div class="main-card">
+      <div class="meta-title">
+        <div>
+          <h2 id="current-user">Steam Idler</h2>
+          <p>3 + 1 Smart Cycle</p>
+        </div>
+        <div class="pulse-indicator" id="status-p">
+          <div class="pulse-dot"></div>
+          <span id="status-txt">Offline</span>
+        </div>
+      </div>
+
+      <div class="grid-stats">
+        <div class="pill-stat">
+          <span class="value" id="stat-hours">0.0</span>
+          <span class="label">Total Hours</span>
+        </div>
+        <div class="pill-stat">
+          <span class="value" id="stat-cards">0</span>
+          <span class="label">Cards Dropped</span>
+        </div>
+      </div>
+
+      <span class="section-label">Priority Core (Steam Profile)</span>
+      <div class="core-showcase">
+        <div class="core-tag">CS2</div>
+        <div class="core-tag">CS:GO</div>
+        <div class="core-tag">Geometry D.</div>
+      </div>
+
+      <span class="section-label">Active Card Stream</span>
+      <div class="stream-card">
+        <span class="stream-name" id="farm-game-name">No active cards</span>
+        <span class="stream-status" id="farm-game-id">IDLE</span>
+      </div>
+
+      <div class="bar-container">
+        <div class="bar-label"><span>Current Game Cards</span><span id="prog-txt">0%</span></div>
+        <div class="rail"><div class="fill-line" id="prog-fill"></div></div>
+      </div>
+
+      <div class="controls-row">
+        <button class="action-btn" id="btn-add-account">+ Add Profile</button>
+        <button class="action-btn main" id="btn-toggle">Start System</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="add-modal">
+    <div class="modal-body">
+      <h3>New Connection</h3>
+      <input id="in-login" type="text" placeholder="Steam Login" autocomplete="off">
+      <input id="in-pass" type="password" placeholder="Password" autocomplete="off">
+      <button class="action-btn main" style="width: 100%; margin-top: 10px;" id="btn-save-acc">Link Account</button>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      var currentId = null;
+      var idleTimer;
+      var $ = function(id) { return document.getElementById(id); };
+
+      function morphIsland(state, htmlContent, duration) {
+        var isl = $('island');
+        var cnt = $('isl-content');
+        if (!duration) duration = 3000;
+        
+        cnt.classList.remove('visible');
+        /* ИСПРАВЛЕНО: убрал интерполяцию, чтобы Node.js не ломался при парсинге */
+        isl.className = 'dynamic-island state-' + state;
+        
+        setTimeout(function() { 
+          cnt.innerHTML = htmlContent; 
+          cnt.classList.add('visible'); 
+        }, 150);
+
+        if (state !== 'compact') {
+          clearTimeout(isl.timeout);
+          isl.timeout = setTimeout(function() {
+            cnt.classList.remove('visible');
+            isl.className = 'dynamic-island state-compact';
+            setTimeout(function() { cnt.innerHTML = ''; }, 200);
+          }, duration);
+        }
+      }
+
+      $('theme-btn').onclick = function() {
+        var h = document.documentElement;
+        h.setAttribute('data-theme', h.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+        morphIsland('wide', '<span style="color:#a855f7">🌓 Theme updated</span><span>Done</span>', 2000);
+      };
+
+      $('btn-add-account').onclick = function() {
+        $('add-modal').classList.add('open');
+        $('in-login').focus();
+      };
+      
+      $('add-modal').onclick = function(e) { 
+        if (e.target.id === 'add-modal') $('add-modal').classList.remove('open'); 
+      };
+
+      $('btn-save-acc').onclick = function() {
+        var l = $('in-login').value;
+        var p = $('in-pass').value;
+        
+        if (!l || !p) {
+          morphIsland('wide', '<span style="color:#ef4444">⚠️ Error</span><span>Fill all fields</span>', 2500);
+          return;
+        }
+
+        $('add-modal').classList.remove('open');
+        morphIsland('large', '<div style="display:flex;flex-direction:column;gap:4px;width:100%"><span>⚡ Connecting...</span><span style="font-size:11px;color:#64748b;">Linking account to system</span></div>', 4000);
+        
+        var coreApps = [730, 4465480, 322170];
+
+        fetch('/accounts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ login: l, password: p, apps: coreApps })
+        }).then(function() {
+          setTimeout(function() { location.reload(); }, 1500);
+        });
+      };
+
+      function resetIdle() {
+        document.body.classList.remove('dimmed');
+        clearTimeout(idleTimer);
+        idleTimer = setTimeout(function() {
+          if ($('status-p').classList.contains('active')) document.body.classList.add('dimmed');
+        }, 300000);
+      }
+      window.onclick = resetIdle;
+      window.ontouchstart = resetIdle;
+
+      function updateData() {
+        if (!currentId) return;
+        fetch('/status/' + currentId).then(function(r) { return r.json(); }).then(function(d) {
+          $('stat-hours').textContent = d.totalHours;
+          $('stat-cards').textContent = d.totalCards;
+          $('prog-fill').style.width = d.cardProgress + '%';
+          $('prog-txt').textContent = d.cardProgress + '%';
+          
+          var active = d.loggedIn;
+          $('status-p').className = active ? 'pulse-indicator active' : 'pulse-indicator';
+          $('status-txt').textContent = active ? 'Farming' : 'Offline';
+          $('btn-toggle').textContent = active ? 'Stop Session' : 'Start System';
+          $('btn-toggle').style.background = active ? 'rgba(239, 68, 68, 0.15)' : '';
+          $('btn-toggle').style.color = active ? '#ef4444' : '';
+
+          if (active && d.appIds && d.appIds.length > 0) {
+            var cardGame = d.appIds.find(function(id) { return id != 730 && id != 4465480 && id != 322170; }) || d.appIds[0];
+            $('farm-game-id').textContent = 'ID ' + cardGame;
+            $('farm-game-name').textContent = (cardGame == 730 || cardGame == 322170) ? 'Searching next...' : 'Game Pool #' + cardGame;
+          } else {
+            $('farm-game-name').textContent = 'Queue Cleared';
+            $('farm-game-id').textContent = 'WAIT';
+          }
+        });
+      }
+
+      fetch('/accounts').then(function(r) { return r.json(); }).then(function(d) {
+        var nav = $('accounts-nav');
+        d.accounts.forEach(function(a) {
+          var t = document.createElement('div');
+          t.className = 'account-tab' + (a.id === d.currentAccount ? ' active' : '');
+          t.textContent = a.login;
+          t.onclick = function() {
+            document.querySelectorAll('.account-tab').forEach(function(el) { el.classList.remove('active'); });
+            t.classList.add('active');
+            currentId = a.id;
+            $('current-user').textContent = a.login;
+            updateData();
+            /* ИСПРАВЛЕНО: чистая конкатенация строк */
+            morphIsland('wide', '<span>👤 profile loaded</span><span style="color:#a855f7">' + a.login + '</span>', 2500);
+          };
+          nav.appendChild(t);
+        });
+        if (d.currentAccount) { currentId = d.currentAccount; updateData(); }
+        setInterval(updateData, 12000);
+      });
+
+      $('btn-toggle').onclick = function() {
+        var isStopping = $('btn-toggle').textContent.includes('Stop');
+        var action = isStopping ? 'stop' : 'start';
+        
+        if (!isStopping) {
+          morphIsland('large', '<div style="display:flex;flex-direction:column;gap:4px;width:100%"><span>⚡ System Booting</span><span style="font-size:11px;color:#64748b;font-weight:400;">Injecting 3+1 Profile Pipeline...</span></div>', 4000);
+        } else {
+          morphIsland('wide', '<span>⚠️ Session Closed</span><span style="color:#ef4444">Disconnected</span>', 3000);
+        }
+
+        fetch('/control/' + currentId, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: action })
+        }).then(function() { setTimeout(updateData, 1200); });
+      };
+
+      var canvas = $('space-canvas'), ctx = canvas.getContext('2d');
+      var stars = [];
+      var resize = function() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
+      window.onresize = resize; resize();
+
+      for (var i = 0; i < 35; i++) {
+        stars.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, r: Math.random()*1.5+0.5, d: Math.random()*0.3+0.05 });
+      }
+
+      function render() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        var isLight = document.documentElement.getAttribute('data-theme') === 'light';
+        ctx.fillStyle = isLight ? 'rgba(0,0,0,0.15)' : 'rgba(255,255,255,0.3)';
+        stars.forEach(function(s) {
+          s.y += s.d; if (s.y > canvas.height) s.y = -5;
+          ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI*2); ctx.fill();
+        });
+        requestAnimationFrame(render);
+      }
+      render();
+    })();
+  </script>
+</body>
+</html>
